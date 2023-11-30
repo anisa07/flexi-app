@@ -55,7 +55,7 @@ export function Autocomplete({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-[230px] justify-between"
+            className="w-[300px] justify-between"
           >
             {value
               ? options.find((option) => option.value === value)?.label

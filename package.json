@@ -1,0 +1,17 @@
+{
+  "name": "flexi-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:validation": "pnpm --stream -r run test:validation",
+    "dev:web": "pnpm --stream -r run dev:web"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.5"
+  },
+  "devDependencies": {}
+}

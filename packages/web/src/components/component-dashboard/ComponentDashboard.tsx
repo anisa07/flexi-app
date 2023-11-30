@@ -1,7 +1,8 @@
 import { Card } from "@/src/components/ui/card";
 import { SelectedComponent } from "@/src/App";
 import { DashboardItem } from "../dashboard-item/DashboardItem";
-import { useState } from "react";
+import { FieldValues } from "react-hook-form";
+import { Rule } from "../rule-selector/RuleSelector";
 
 interface ComponentDashboardProps {
   selectedComponents: SelectedComponent[];
@@ -14,21 +15,25 @@ export const ComponentDashboard = ({
   onRemoveComponent,
   onUpdateComponent,
 }: ComponentDashboardProps) => {
-  const [warning, setWarning] = useState("");
-  const handleUpdateComponent = (selectedComponent, data, fieldRules) => {
-    setWarning("");
+  const handleUpdateComponent = (
+    selectedComponent: SelectedComponent,
+    data: FieldValues,
+    fieldRules: Rule[]
+  ) => {
     const hasComponentWithSameName = selectedComponents.find(
-      (item) => item.component.name === data.name
+      (item) =>
+        item.component.formComponentName === data.formComponentName &&
+        selectedComponent.id !== item.id
     );
     if (hasComponentWithSameName) {
-      setWarning("Component with the same name already exist");
-      return;
+      return data.formComponentName;
     }
+
     onUpdateComponent({
       ...selectedComponent,
       component: {
         ...selectedComponent.component,
-        name: data.name,
+        formComponentName: data.formComponentName,
         placeholder: data.placeholder,
         label: data.label,
         validation: fieldRules,
@@ -51,7 +56,6 @@ export const ComponentDashboard = ({
           <p className="text-center">No components added</p>
         )}
       </Card>
-      {warning && <p>{warning}</p>}
     </>
   );
 };

@@ -24,7 +24,7 @@ const rules = [
 ];
 
 export interface Rule {
-  name: string;
+  ruleName: string;
   rule: string;
   withParam: boolean;
   param?: any;
@@ -44,7 +44,7 @@ export const RulesSelector = ({
   const handleSaveParam = () => {
     seterrorMessage("");
     if (!selectedRule) return;
-    const param = checkRuleParams(selectedRule.name);
+    const param = checkRuleParams(selectedRule.ruleName);
     if (!param) return;
     const currentParam = paramRef.current?.value || "";
     if (currentParam.trim() === "") {
@@ -74,14 +74,14 @@ export const RulesSelector = ({
       {
         ...selectedRule,
         param: paramValue,
-        rule: `${selectedRule.name}(${paramValue})`,
+        rule: `${selectedRule.ruleName}(${paramValue})`,
       },
     ]);
     setSlectedRule(undefined);
   };
 
   const fieldHasRule = (rule: Option) => {
-    return fieldRules.find((r: Rule) => r.name === rule.value);
+    return fieldRules.find((r: Rule) => r.ruleName === rule.value);
   };
 
   const updateWithRule = (rule: Rule) => {
@@ -95,7 +95,7 @@ export const RulesSelector = ({
     }
     const withParam = checkRuleParams(rule.value);
     const validationRule = {
-      name: rule.value,
+      ruleName: rule.value,
       rule: `${rule.value}()`,
       withParam: !!withParam,
     };
@@ -106,7 +106,9 @@ export const RulesSelector = ({
   };
 
   const onRemoveRule = (rule: string) => {
-    onUpdateFieldRules(fieldRules.filter((item: Rule) => item.name !== rule));
+    onUpdateFieldRules(
+      fieldRules.filter((item: Rule) => item.ruleName !== rule)
+    );
   };
 
   const onMove = (currentIndex: number, nextIndex: number) => {
@@ -147,17 +149,19 @@ export const RulesSelector = ({
           {!!errorMessage && <p className="text-red-700">{errorMessage}</p>}
         </div>
       )}
-      <div className="flex min-h-10 border p-2 flex-wrap">
-        {fieldRules.map((validationRule: Rule, index: number) => (
-          <RuleItem
-            key={validationRule.name}
-            validationRule={validationRule}
-            index={index}
-            onRemoveRule={onRemoveRule}
-            onMove={onMove}
-          />
-        ))}
-      </div>
+      {fieldRules.length > 0 && (
+        <div className="flex border p-2 flex-wrap">
+          {fieldRules.map((validationRule: Rule, index: number) => (
+            <RuleItem
+              key={validationRule.ruleName}
+              validationRule={validationRule}
+              index={index}
+              onRemoveRule={onRemoveRule}
+              onMove={onMove}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 };
@@ -174,21 +178,23 @@ const RuleItem = ({
   index: number;
 }) => {
   const handleRemoveRule = () => {
-    onRemoveRule(validationRule.name);
+    onRemoveRule(validationRule.ruleName);
   };
 
   return (
-    <Draggable onMove={onMove} index={index} id={validationRule.name}>
-      <Badge key={validationRule.name}>
-        {validationRule.rule}
-        <X
-          className="ml-1 h-4 w-4"
-          onClick={(e) => {
-            e.preventDefault();
-            handleRemoveRule();
-          }}
-        />
-      </Badge>
+    <Draggable onMove={onMove} index={index} id={validationRule.ruleName}>
+      <div className="mr-1 mb-1  border-2 border-solid rounded-sm">
+        <Badge key={validationRule.ruleName}>
+          {validationRule.rule}
+          <X
+            className="ml-1 h-4 w-4"
+            onClick={(e) => {
+              e.preventDefault();
+              handleRemoveRule();
+            }}
+          />
+        </Badge>
+      </div>
     </Draggable>
   );
 };

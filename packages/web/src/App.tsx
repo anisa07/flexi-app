@@ -6,31 +6,30 @@ import { v4 as uuidv4 } from "uuid";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Button } from "@/src/components/ui/button";
-// TODO go to validation-part (npm package????)
-import { ValidationMap } from "../../validation-part/functions/validation-functions";
+import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
 
 export interface SelectedComponent {
   name: string;
   id: string;
   component: {
     type: string;
+    formComponentName: string;
     label: string;
     placeholder: string;
-    name: string;
     validation: Array<{
-      name: string;
-      rule: string;
+      ruleName: string;
       withParam: boolean;
       param?: any;
     }>;
   };
 }
 
-const generateComponent = (option: Option) => ({
+const generateComponent = (option: Option): SelectedComponent => ({
   name: option.label,
   id: uuidv4(),
   component: {
     type: option.value,
+    formComponentName: "",
     label: "",
     placeholder: "",
     validation: [],
@@ -60,7 +59,7 @@ function App() {
     }
   };
 
-  const handleSelectComponent = (option: Option) => {
+  const handleAddComponent = (option: Option) => {
     setSelectedComponents([...selectedComponents, generateComponent(option)]);
   };
 
@@ -91,11 +90,13 @@ function App() {
     console.log("newSchema", newSchema);
   };
 
+  console.log("selectedComponents", selectedComponents);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-5">
         <div className="mb-4">
-          <ComponentSelector onSelectComponents={handleSelectComponent} />
+          <ComponentSelector onSelectComponents={handleAddComponent} />
         </div>
         <div className="mb-4">
           <ComponentDashboard
@@ -104,7 +105,7 @@ function App() {
             onUpdateComponent={handleUpdateComponent}
           />
         </div>
-        <Button onClick={handleGenerateSchema}>Generate schema</Button>
+        {/* <Button onClick={handleGenerateSchema}>Generate schema</Button> */}
       </div>
     </DndProvider>
   );
