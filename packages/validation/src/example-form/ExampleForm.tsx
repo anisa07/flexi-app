@@ -18,7 +18,7 @@ export const ExampleForm = () => {
   };
 
   console.log("errors", errors);
-
+  console.log("isValid", isValid);
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div style={{ display: "flex", flexDirection: "column" }}>

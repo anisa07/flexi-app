@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test:validation": "pnpm --stream -r run test:validation",
-    "dev:web": "pnpm --stream -r run dev:web"
+    "dev:web": "pnpm --stream -r run dev:web",
+    "dev:validation": "pnpm --stream -r run dev:validation"
   },
   "keywords": [],
   "author": "",

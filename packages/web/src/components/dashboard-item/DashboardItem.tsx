@@ -94,7 +94,7 @@ export const DashboardItem = ({
           </Badge>
         </a>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
           <DialogTitle>Component parameters</DialogTitle>
           <DialogDescription>

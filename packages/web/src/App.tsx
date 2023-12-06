@@ -7,6 +7,8 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Button } from "@/src/components/ui/button";
 import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
+import CodeSnippet from "./components/code-snippet/CodeSnippet";
+import { generateForm } from "./utils/generate-component";
 
 export interface SelectedComponent {
   name: string;
@@ -48,6 +50,8 @@ function App() {
     };
   }>();
 
+  const [newForm, setNewForm] = React.useState("");
+
   const handleUpdateComponent = (component: SelectedComponent) => {
     const findIndex = selectedComponents.findIndex(
       (c) => c.id === component.id
@@ -72,12 +76,16 @@ function App() {
     const newSchema = {};
 
     for (const selected of selectedComponents) {
-      const name = selected.component.name;
+      const name = selected.component.formComponentName;
       if (!name) continue;
+
       newSchema[name] = {
         name,
+        label: selected.component.label,
+        placeholder: selected.component.label,
+        type: selected.component.type,
         validationRules: selected.component.validation.map((r) => {
-          const validationFunction = ValidationMap.get(r.name);
+          const validationFunction = ValidationMap.get(r.ruleName);
           if (r.withParam) {
             return validationFunction && validationFunction(r.param);
           } else {
@@ -86,8 +94,10 @@ function App() {
         }),
       };
     }
-    setSchema(newSchema);
     console.log("newSchema", newSchema);
+    if (Object.keys(newSchema).length > 0) {
+      setNewForm(generateForm(newSchema));
+    }
   };
 
   console.log("selectedComponents", selectedComponents);
@@ -105,7 +115,8 @@ function App() {
             onUpdateComponent={handleUpdateComponent}
           />
         </div>
-        {/* <Button onClick={handleGenerateSchema}>Generate schema</Button> */}
+        <Button onClick={handleGenerateSchema}>Generate schema</Button>
+        <CodeSnippet code={newForm} />
       </div>
     </DndProvider>
   );
