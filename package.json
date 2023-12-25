@@ -11,8 +11,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@radix-ui/react-dialog": "^1.0.5"
-  },
+  "dependencies": {},
   "devDependencies": {}
 }

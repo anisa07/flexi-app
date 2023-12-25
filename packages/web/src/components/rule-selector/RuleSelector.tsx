@@ -21,6 +21,18 @@ const rules = [
     value: "regex",
     label: "Regex",
   },
+  {
+    value: "ipaddress",
+    label: "IpAddress",
+  },
+  {
+    value: "minlength",
+    label: "MinLength",
+  },
+  {
+    value: "maxlength",
+    label: "MaxLength",
+  },
 ];
 
 export interface Rule {

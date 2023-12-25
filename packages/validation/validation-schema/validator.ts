@@ -1,25 +1,13 @@
-export interface Schema {
-  [field: string]: ValidationRule;
-}
-
-interface ValidationRule {
-  name: string;
-  validationRules: Array<(v: any, f: string) => undefined | Error>;
-}
-
-export interface Error {
-  error: boolean;
-  errorMessage: string;
-}
+import { FormSchema, Error, ValidationRule } from "../types/types";
 
 const applyRule = (
   value: any,
   name: string,
-  rules: ((v: any) => undefined | Error)[]
+  rules: ((value: any, field: string) => undefined | Error)[]
 ) => {
   const errors: { [field: string]: Error | Error[] } = {};
   for (const rule of rules) {
-    const result = rule(value);
+    const result = rule(value, name);
     if (result) {
       errors[name] = result;
       break;
@@ -30,56 +18,66 @@ const applyRule = (
 
 const applyRuleToArray = (
   value: Record<string, any>,
-  rules: {
-    name: string;
-    rule: (v: any) => undefined | Error;
-  }[]
+  validationRules: ValidationRule[]
 ) => {
-  const errors = [];
-  for (const validation of rules) {
-    const error = validation.rule(value[validation.name]);
-    console.log("applyRuleToArray error", error);
-    errors.push(error);
+  let errors = {};
+  for (const validation of validationRules) {
+    const error = applyRule(
+      value[validation.name],
+      validation.name,
+      validation.rules
+    );
+    errors = { ...errors, ...error };
   }
-  console.log("applyRuleToArray errors", errors);
+  return [errors];
+};
+
+const prepareError = (errors: (Error | undefined | {})[]) => {
+  let index = 0;
+  while (index <= errors.length - 1) {
+    if (Object.keys(errors[index] ?? {}).length === 0) {
+      errors.splice(index, 1);
+    } else {
+      index++;
+    }
+  }
   return errors;
 };
 
 export class Validator {
-  schema: Schema;
-  constructor(schema: Schema) {
+  schema: FormSchema;
+  constructor(schema: FormSchema) {
     this.schema = schema;
   }
 
   validate(data: Record<string, any>) {
-    const errors: { [field: string]: Error | (Error | undefined)[] } = {};
+    const errors: { [field: string]: Error | Array<Error | undefined> } = {};
     for (const field in this.schema) {
-      const rules = this.schema[field].validationRules;
+      const validation = this.schema[field].validationRules;
       const name = this.schema[field].name;
       const value = data[name];
       if (Array.isArray(value)) {
         for (const item of value) {
-          const arrayErrors = applyRuleToArray(item, rules);
-
-          errors[name] = Array.isArray(errors[name])
-            ? [...errors[name], ...arrayErrors]
-            : arrayErrors;
-        }
-        console.log("errors[name]", errors[name]);
-        if (Array.isArray(errors[name])) {
-          const nonUndefinedErrors = errors[name].some(
-            (error: Error) => error !== undefined
+          const arrayErrors = applyRuleToArray(
+            item,
+            validation as ValidationRule[]
           );
-          if (!nonUndefinedErrors) {
+          const preparedErrorArray = prepareError(arrayErrors);
+          errors[name] = Array.isArray(errors[name])
+            ? [...errors[name], ...preparedErrorArray]
+            : preparedErrorArray;
+          if (errors[name]?.length === 0) {
             delete errors[name];
           }
         }
-        console.log("errors", errors);
       } else {
-        const error = applyRule(value, name, rules);
-        if (error) {
-          errors[name] = error;
-          break;
+        const error = applyRule(
+          value,
+          name,
+          validation as ((v: any) => undefined | Error)[]
+        );
+        if (error[name]) {
+          errors[name] = error[name];
         }
       }
     }

@@ -1,16 +1,19 @@
 import { EMAIL_REGEX, IP_REGEX } from "../utils/regexp";
 import { isNumber, isString, isValidRegex } from "../utils/util-functions";
+import { Error } from "../types/types";
 
 export const ValidationMap = new Map();
 
-export const required = () => (value: string | number, field: string) => {
-  if (value && isString(value) && value.trim().length > 0) return;
-  if (value && isNumber(value) && value.toString().trim().length > 0) return;
-  return {
-    error: true,
-    errorMessage: "Required",
+export const required =
+  () =>
+  (value: string | number, field: string): Error | undefined => {
+    if (value && isString(value) && value.trim().length > 0) return;
+    if (value && isNumber(value) && value.toString().trim().length > 0) return;
+    return {
+      error: true,
+      errorMessage: "Required",
+    };
   };
-};
 ValidationMap.set("required", required);
 
 export const regex =
@@ -43,7 +46,7 @@ export const ipAddress = () => (value: string, field: string) => {
     errorMessage: `Field has invalid ip address`,
   };
 };
-ValidationMap.set("ipAddress", ipAddress);
+ValidationMap.set("ipaddress", ipAddress);
 
 export const minLength = (length: number) => (value: string, field: string) => {
   if (value && value.length >= length) return;
@@ -52,7 +55,7 @@ export const minLength = (length: number) => (value: string, field: string) => {
     errorMessage: `Min length is ${length}`,
   };
 };
-ValidationMap.set("minLength", minLength);
+ValidationMap.set("minlength", minLength);
 
 export const maxLength = (length: number) => (value: string, field: string) => {
   if (value && value.length <= length) return;
@@ -61,4 +64,4 @@ export const maxLength = (length: number) => (value: string, field: string) => {
     errorMessage: `Max length is ${length}`,
   };
 };
-ValidationMap.set("maxLength", maxLength);
+ValidationMap.set("maxlength", maxLength);

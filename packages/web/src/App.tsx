@@ -7,8 +7,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Button } from "@/src/components/ui/button";
 import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
-import CodeSnippet from "./components/code-snippet/CodeSnippet";
-import { generateForm } from "./utils/generate-component";
+// import CodeSnippet from "./components/code-snippet/CodeSnippet";
+import { GeneratedForm } from "./utils/generate-component";
+import { CheckboxWithhLabel } from "./components/checkbox-with-label/CheckboxWithLabel";
 
 export interface SelectedComponent {
   name: string;
@@ -23,10 +24,11 @@ export interface SelectedComponent {
       withParam: boolean;
       param?: any;
     }>;
+    subComponents: SelectedComponent[];
   };
 }
 
-const generateComponent = (option: Option): SelectedComponent => ({
+export const generateComponent = (option: Option): SelectedComponent => ({
   name: option.label,
   id: uuidv4(),
   component: {
@@ -35,13 +37,11 @@ const generateComponent = (option: Option): SelectedComponent => ({
     label: "",
     placeholder: "",
     validation: [],
+    subComponents: [],
   },
 });
 
 function App() {
-  const [selectedComponents, setSelectedComponents] = React.useState<
-    SelectedComponent[]
-  >([]);
   // This is a simple schema for the form
   const [schema, setSchema] = React.useState<{
     [name: string]: {
@@ -51,6 +51,12 @@ function App() {
   }>();
 
   const [newForm, setNewForm] = React.useState("");
+
+  const [addDynamicForm, setAddDynamicForm] = React.useState(false);
+
+  const [selectedComponents, setSelectedComponents] = React.useState<
+    SelectedComponent[]
+  >([]);
 
   const handleUpdateComponent = (component: SelectedComponent) => {
     const findIndex = selectedComponents.findIndex(
@@ -68,6 +74,12 @@ function App() {
   };
 
   const handleRemoveComponent = (id: string) => {
+    const component = selectedComponents.find(
+      (component) => component.id === id
+    );
+    if (component?.component.type === "dynamicForm") {
+      setAddDynamicForm(false);
+    }
     setSelectedComponents(selectedComponents.filter((c) => c.id !== id));
   };
 
@@ -79,44 +91,103 @@ function App() {
       const name = selected.component.formComponentName;
       if (!name) continue;
 
-      newSchema[name] = {
-        name,
-        label: selected.component.label,
-        placeholder: selected.component.label,
-        type: selected.component.type,
-        validationRules: selected.component.validation.map((r) => {
-          const validationFunction = ValidationMap.get(r.ruleName);
-          if (r.withParam) {
-            return validationFunction && validationFunction(r.param);
-          } else {
-            return validationFunction && validationFunction();
-          }
-        }),
-      };
+      if (selected.component.type !== "dynamicForm") {
+        newSchema[name] = {
+          name,
+          label: selected.component.label,
+          placeholder: selected.component.placeholder,
+          type: selected.component.type,
+          validationRules: selected.component.validation.map((r) => {
+            const validationFunction = ValidationMap.get(r.ruleName);
+            if (r.withParam) {
+              return validationFunction && validationFunction(r.param);
+            } else {
+              return validationFunction && validationFunction();
+            }
+          }),
+        };
+      } else {
+        newSchema[name] = {
+          name,
+          type: "array",
+          validationRules: [],
+        };
+        for (const dynamicComponent of selected.component.subComponents) {
+          newSchema[name].validationRules.push({
+            name: dynamicComponent.component.formComponentName,
+            label: dynamicComponent.component.label,
+            placeholder: dynamicComponent.component.placeholder,
+            type: dynamicComponent.component.type,
+            rules: dynamicComponent.component.validation.map((r) => {
+              const validationFunction = ValidationMap.get(r.ruleName);
+              if (r.withParam) {
+                return validationFunction && validationFunction(r.param);
+              } else {
+                return validationFunction && validationFunction();
+              }
+            }),
+          });
+        }
+      }
     }
+
     console.log("newSchema", newSchema);
     if (Object.keys(newSchema).length > 0) {
-      setNewForm(generateForm(newSchema));
+      setSchema(newSchema);
+      // setNewForm(generateForm(newSchema));
+      // generateForm(newSchema);
     }
   };
 
-  console.log("selectedComponents", selectedComponents);
+  const handleAddDynamicForm = (add: boolean) => {
+    const selectedComponentsCopy = [...selectedComponents];
+    if (!add) {
+      const dynamicFormIndex = selectedComponents.findIndex(
+        (component) => component.name === "dynamicForm"
+      );
+      selectedComponentsCopy.splice(dynamicFormIndex, 1);
+      setSelectedComponents(selectedComponentsCopy);
+    } else {
+      setSelectedComponents([
+        ...selectedComponents,
+        generateComponent({
+          label: "DynamicForm",
+          value: "dynamicForm",
+        }),
+      ]);
+    }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-5">
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col gap-2.5 md:flex-row">
           <ComponentSelector onSelectComponents={handleAddComponent} />
-        </div>
-        <div className="mb-4">
-          <ComponentDashboard
-            selectedComponents={selectedComponents}
-            onRemoveComponent={handleRemoveComponent}
-            onUpdateComponent={handleUpdateComponent}
+          <CheckboxWithhLabel
+            label="Add Dynamic form"
+            checked={addDynamicForm}
+            onCheck={(v) => {
+              setAddDynamicForm(v);
+              handleAddDynamicForm(v);
+            }}
           />
         </div>
-        <Button onClick={handleGenerateSchema}>Generate schema</Button>
-        <CodeSnippet code={newForm} />
+        <div className="flex flex-col gap-2.5 md:flex-row">
+          <div className="flex-1">
+            <ComponentDashboard
+              selectedComponents={selectedComponents}
+              onRemoveComponent={handleRemoveComponent}
+              onUpdateComponent={handleUpdateComponent}
+            />
+            <Button onClick={handleGenerateSchema} className="mt-4">
+              Generate schema
+            </Button>
+          </div>
+          <div className="flex-1">
+            {/* <CodeSnippet code={newForm} /> */}
+            {schema && <GeneratedForm schema={schema} />}
+          </div>
+        </div>
       </div>
     </DndProvider>
   );

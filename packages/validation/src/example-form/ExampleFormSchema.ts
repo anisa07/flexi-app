@@ -5,8 +5,9 @@ import {
   required,
   regex,
 } from "../../functions/validation-functions";
+import { FormSchema } from "../../types/types";
 
-export const ExampleFormSchema = {
+export const ExampleFormSchema: FormSchema = {
   email: {
     name: "email",
     validationRules: [required(), email()],
@@ -21,19 +22,25 @@ export const ExampleFormSchema = {
   },
 };
 
-// TODO pass validation ruales , add array() ???
-// emails: {
-//  name: "emails",
-//  validationRules: [array(), email()],
-// }
-
-export const ExampleFormSchema2 = {
-  emails: {
-    name: "emails",
+export const ExampleFormSchema2: FormSchema = {
+  name: {
+    name: "name",
+    validationRules: [required(), minLength(5), maxLength(10)],
+  },
+  info: {
+    name: "info",
+    field: "array",
     validationRules: [
       {
         name: "email",
-        rule: email(),
+        // type?
+        // placeholder?
+        // label
+        rules: [email()],
+      },
+      {
+        name: "user",
+        rules: [required(), minLength(5)],
       },
     ],
   },

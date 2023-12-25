@@ -1,52 +1,79 @@
-import React from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
-import { validationResolver } from "../../validation-resolver/validation-resolver";
+import { Controller } from "react-hook-form";
 import { ExampleFormSchema2 } from "./ExampleFormSchema";
+import { useFormWrapper } from "../../utils/useFormWrapper";
 
 export const ExampleForm2 = () => {
+  const customSubmitHandler = (data) => console.log(data);
+
   const {
-    control,
+    fields,
+    append,
+    remove,
     handleSubmit,
-    formState: { isValid, errors },
-  } = useForm({
-    resolver: validationResolver(ExampleFormSchema2),
-    // defaultValues: {}; you can populate the fields by this attribute
-    defaultValues: {
-      emails: [{ email: "" }],
-    },
-  });
-  const { fields, append, remove } = useFieldArray({
     control,
-    name: "emails",
+    formState: { isValid, errors },
+  } = useFormWrapper({
+    schema: ExampleFormSchema2,
+    defaultValues: {
+      info: [{ email: "", user: "" }],
+      name: "",
+    },
+    nameForFieldsArray: "info",
+    handleSubmit: customSubmitHandler,
   });
 
   console.log("isValid", isValid);
   console.log("errors", errors);
 
   return (
-    <form onSubmit={handleSubmit((data) => console.log(data))}>
-      <ul>
-        {fields.map((item, index) => (
-          <li key={item.id}>
-            <Controller
-              render={({ field }) => <input {...field} />}
-              name={`emails.${index}.email`}
-              control={control}
-            />
-            <button type="button" onClick={() => remove(index)}>
-              Delete
-            </button>
-            <div style={{ color: "red", fontSize: "12px" }}>
-              {errors?.emails &&
-                errors?.emails[index]?.error &&
-                errors?.emails[index]?.errorMessage}
-            </div>
-          </li>
-        ))}
-      </ul>
+    <form onSubmit={handleSubmit}>
       <button type="button" onClick={() => append({ email: "" })}>
         append
       </button>
+      <ul>
+        {fields.map((item, index) => (
+          <li key={item.id} style={{ display: "flex" }}>
+            <div>
+              <Controller
+                render={({ field }) => <input {...field} placeholder="Email" />}
+                name={`info.${index}.email`}
+                control={control}
+              />
+              <p style={{ color: "red", fontSize: "12px", margin: 0 }}>
+                {errors?.info &&
+                  errors?.info[index]?.email?.error &&
+                  errors?.info[index]?.email?.errorMessage}
+              </p>
+            </div>
+            <div>
+              <Controller
+                render={({ field }) => <input {...field} placeholder="User" />}
+                name={`info.${index}.user`}
+                control={control}
+              />
+              <p style={{ color: "red", fontSize: "12px", margin: 0 }}>
+                {errors?.info &&
+                  errors?.info[index]?.user?.error &&
+                  errors?.info[index]?.user?.errorMessage}
+              </p>
+            </div>
+            <button type="button" onClick={() => remove(index)}>
+              Delete
+            </button>
+            <div style={{ color: "red", fontSize: "12px" }}></div>
+          </li>
+        ))}
+      </ul>
+      <div>
+        <Controller
+          render={({ field }) => <input {...field} placeholder="Name" />}
+          name={"name"}
+          control={control}
+        />
+        <p style={{ color: "red", fontSize: "12px", margin: 0 }}>
+          {errors?.name?.error && errors?.name?.errorMessage}
+        </p>
+      </div>
       <input type="submit" />
     </form>
   );

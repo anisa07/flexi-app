@@ -9,6 +9,30 @@ const components = [
     value: "textarea",
     label: "TextArea",
   },
+  {
+    value: "password",
+    label: "Password",
+  },
+  {
+    value: "select",
+    label: "Select",
+  },
+  {
+    value: "checkbox",
+    label: "Checkbox",
+  },
+  {
+    value: "radiogroup",
+    label: "RadioGroup",
+  },
+  {
+    value: "togglebutton",
+    label: "ToggleButton",
+  },
+  {
+    value: "datepicker",
+    label: "DatePicker",
+  },
 ];
 
 interface ComponentSelectorProps {
