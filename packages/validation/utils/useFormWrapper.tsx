@@ -17,7 +17,7 @@ export const useFormWrapper = ({
   handleSubmit: customSubmitHandler,
   mode = "onSubmit",
 }: useFormWrapperProps) => {
-  const { control, handleSubmit, formState } = useForm({
+  const { control, handleSubmit, formState, register } = useForm({
     resolver: validationResolver(schema),
     defaultValues,
     mode,
@@ -45,5 +45,6 @@ export const useFormWrapper = ({
     handleSubmit: submitForm,
     control,
     formState,
+    register,
   };
 };

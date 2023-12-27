@@ -1,5 +1,19 @@
 import { Controller, FieldValues } from "react-hook-form";
 import { useFormWrapper } from "@flexi-app/validation/utils/useFormWrapper";
+import { Input } from "@/src/components/ui/input";
+// import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Switch } from "@/src/components/ui/switch";
+
+const detectRenderType = (type: string) => {
+  if (["input", "password", "textarea"].includes(type)) {
+    return "renderInput";
+  }
+  if (type === "checkbox" || type === "togglebutton") {
+    return "renderCheck";
+  }
+};
 
 export const GeneratedForm = ({ schema }) => {
   const arrayOfFieldsName = Object.keys(schema).filter(
@@ -43,10 +57,7 @@ export const GeneratedForm = ({ schema }) => {
     <form onSubmit={handleSubmit}>
       {Object.keys(schema).map((componentName) => {
         return schema[componentName].type === "array" ? (
-          <div
-            style={{ display: "flex", flexDirection: "column" }}
-            key={componentName}
-          >
+          <div className="flex flex-col" key={componentName}>
             <NewComponents
               {...schema[componentName]}
               defaultValues={defaultValues[componentName][0]}
@@ -59,22 +70,16 @@ export const GeneratedForm = ({ schema }) => {
           </div>
         ) : (
           <div
-            style={{ display: "flex", flexDirection: "column" }}
+            className="flex flex-col first:mt-0 mt-2 mb-2"
             key={componentName}
           >
-            <label>{schema[componentName].label}</label>
-            <Controller
-              render={({ field }) => (
-                <NewComponent {...schema[componentName]} {...field} />
-              )}
-              name={componentName}
+            <NewComponent
+              componentName={componentName}
               control={control}
+              errors={errors}
+              label={schema[componentName].label}
+              {...schema[componentName]}
             />
-            {errors[componentName] && (
-              <span style={{ color: "red" }}>
-                {errors[componentName]?.errorMessage}
-              </span>
-            )}
           </div>
         );
       })}
@@ -130,11 +135,16 @@ export const GeneratedForm = ({ schema }) => {
   //   `;
 };
 
-const NewComponent = ({ type, field, ...rest }) => {
-  if (type === "textarea") {
-    return <textarea {...rest} style={{ border: "1px solid black" }} />;
+const NewComponent = ({ type, ...rest }) => {
+  const renderType = detectRenderType(type);
+
+  if (renderType === "renderInput") {
+    return <RenderInputComponent type={type} {...rest} />;
   }
-  return <input {...rest} style={{ border: "1px solid black" }} />;
+
+  if (renderType === "renderCheck") {
+    return <RenderCheckComponent type={type} {...rest} />;
+  }
 };
 
 const NewComponents = ({
@@ -188,5 +198,98 @@ const NewComponents = ({
         ))}
       </ul>
     </>
+  );
+};
+
+const RenderInputComponent = ({
+  type,
+  componentName,
+  control,
+  errors,
+  label,
+  ...rest
+}) => {
+  return (
+    <>
+      {label && (
+        <label
+          htmlFor={componentName}
+          className={`${errors[componentName] && "text-red-700"}`}
+        >
+          {label}
+        </label>
+      )}
+      <Controller
+        render={({ field }) => (
+          <div className="mb-1">
+            {type === "textarea" && (
+              <Textarea id={componentName} {...rest} {...field} />
+            )}
+            {(type === "input" || type === "password") && (
+              <Input id={componentName} type={type} {...rest} {...field} />
+            )}
+          </div>
+        )}
+        name={componentName}
+        control={control}
+      />
+      {errors[componentName] && (
+        <span className="mb-2 text-red-700">
+          {errors[componentName]?.errorMessage}
+        </span>
+      )}
+    </>
+  );
+};
+
+const RenderCheckComponent = ({
+  control,
+  componentName,
+  errors,
+  label,
+  type,
+}) => {
+  return (
+    <Controller
+      name={componentName}
+      control={control}
+      render={({ field }) => {
+        return (
+          <div className="items-top flex space-x-2">
+            {type === "checkbox" && (
+              <Checkbox
+                id={componentName}
+                {...field}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
+            {type === "togglebutton" && (
+              <Switch
+                id={componentName}
+                {...field}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
+            <div className="grid gap-1.5 leading-none">
+              {label && (
+                <label
+                  htmlFor={componentName}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {label}
+                </label>
+              )}
+              {errors[componentName] && (
+                <span className="mb-2 text-red-700">
+                  {errors[componentName]?.errorMessage}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      }}
+    />
   );
 };

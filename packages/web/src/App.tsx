@@ -9,7 +9,7 @@ import { Button } from "@/src/components/ui/button";
 import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
 // import CodeSnippet from "./components/code-snippet/CodeSnippet";
 import { GeneratedForm } from "./utils/generate-component";
-import { CheckboxWithhLabel } from "./components/checkbox-with-label/CheckboxWithLabel";
+import { CheckboxWithhLabel } from "./components/checkbox/CheckboxWithLabel";
 
 export interface SelectedComponent {
   name: string;

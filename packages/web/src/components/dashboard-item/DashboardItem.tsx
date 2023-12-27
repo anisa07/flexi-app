@@ -124,8 +124,15 @@ export const DashboardItem = ({
   const isComponentDynamicForm = () =>
     selectedComponent.component.type === "dynamicForm";
 
+  const isComponentDropdown = () =>
+    selectedComponent.component.type === "select";
+
   return (
-    <div className="mr-2 mb-2 p-1 border-2 border-solid rounded-sm inline-block">
+    <div
+      className={`mr-2 mb-2 p-1 border-2 border-solid rounded-sm inline-block ${
+        isComponentDynamicForm() ? "bg-slate-200" : "inherit"
+      }`}
+    >
       <Badge key={selectedComponent.id}>
         <div className="flex">
           <div className="flex flex-col">

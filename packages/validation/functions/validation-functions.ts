@@ -6,7 +6,8 @@ export const ValidationMap = new Map();
 
 export const required =
   () =>
-  (value: string | number, field: string): Error | undefined => {
+  (value: string | number | boolean, field: string): Error | undefined => {
+    if (typeof value === "boolean" && value) return;
     if (value && isString(value) && value.trim().length > 0) return;
     if (value && isNumber(value) && value.toString().trim().length > 0) return;
     return {
