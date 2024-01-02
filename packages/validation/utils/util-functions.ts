@@ -1,8 +1,8 @@
-export function isString(value: string | number): value is string {
+export function isString(value: any): value is string {
   return typeof value === "string";
 }
 
-export function isNumber(value: string | number): value is number {
+export function isNumber(value: any): value is number {
   return typeof value === "number";
 }
 

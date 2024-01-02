@@ -1,59 +1,23 @@
 import React from "react";
-import { ComponentDashboard } from "./components/component-dashboard/ComponentDashboard";
-import { ComponentSelector } from "./components/component-selector/ComponentSelector";
-import { Option } from "@/src/components/autocomplete/Autocomplete";
-import { v4 as uuidv4 } from "uuid";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { Option } from "@/src/components/autocomplete/Autocomplete";
 import { Button } from "@/src/components/ui/button";
-import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
-// import CodeSnippet from "./components/code-snippet/CodeSnippet";
-import { GeneratedForm } from "./utils/generate-component";
+// import { ValidationMap } from "@flexi-app/validation/functions/validation-functions";
+import { ComponentDashboard } from "./components/component-dashboard/ComponentDashboard";
+import { ComponentSelector } from "./components/component-selector/ComponentSelector";
 import { CheckboxWithhLabel } from "./components/checkbox/CheckboxWithLabel";
-
-export interface SelectedComponent {
-  name: string;
-  id: string;
-  component: {
-    type: string;
-    formComponentName: string;
-    label: string;
-    placeholder: string;
-    validation: Array<{
-      ruleName: string;
-      withParam: boolean;
-      param?: any;
-    }>;
-    subComponents: SelectedComponent[];
-  };
-}
-
-export const generateComponent = (option: Option): SelectedComponent => ({
-  name: option.label,
-  id: uuidv4(),
-  component: {
-    type: option.value,
-    formComponentName: "",
-    label: "",
-    placeholder: "",
-    validation: [],
-    subComponents: [],
-  },
-});
+// import CodeSnippet from "./components/code-snippet/CodeSnippet";
+import { generateBlankComponent } from "./utils/generate-blank-component";
+import { GeneratedForm } from "./utils/generate-component";
+import { SelectedComponent } from "./types/SelectedComponent";
+import { GeneratedSchema } from "./types/GeneratedSchema";
+import { generateShema } from "./utils/generate-schema";
 
 function App() {
-  // This is a simple schema for the form
-  const [schema, setSchema] = React.useState<{
-    [name: string]: {
-      name: string;
-      validationRules: Array<(p?: any) => any>;
-    };
-  }>();
-
-  const [newForm, setNewForm] = React.useState("");
-
+  const [schema, setSchema] = React.useState<GeneratedSchema>();
+  // const [newForm, setNewForm] = React.useState("");
   const [addDynamicForm, setAddDynamicForm] = React.useState(false);
-
   const [selectedComponents, setSelectedComponents] = React.useState<
     SelectedComponent[]
   >([]);
@@ -70,7 +34,10 @@ function App() {
   };
 
   const handleAddComponent = (option: Option) => {
-    setSelectedComponents([...selectedComponents, generateComponent(option)]);
+    setSelectedComponents([
+      ...selectedComponents,
+      generateBlankComponent(option),
+    ]);
   };
 
   const handleRemoveComponent = (id: string) => {
@@ -84,59 +51,7 @@ function App() {
   };
 
   const handleGenerateSchema = () => {
-    console.log("selectedComponents", selectedComponents);
-    const newSchema = {};
-
-    for (const selected of selectedComponents) {
-      const name = selected.component.formComponentName;
-      if (!name) continue;
-
-      if (selected.component.type !== "dynamicForm") {
-        newSchema[name] = {
-          name,
-          label: selected.component.label,
-          placeholder: selected.component.placeholder,
-          type: selected.component.type,
-          validationRules: selected.component.validation.map((r) => {
-            const validationFunction = ValidationMap.get(r.ruleName);
-            if (r.withParam) {
-              return validationFunction && validationFunction(r.param);
-            } else {
-              return validationFunction && validationFunction();
-            }
-          }),
-        };
-      } else {
-        newSchema[name] = {
-          name,
-          type: "array",
-          validationRules: [],
-        };
-        for (const dynamicComponent of selected.component.subComponents) {
-          newSchema[name].validationRules.push({
-            name: dynamicComponent.component.formComponentName,
-            label: dynamicComponent.component.label,
-            placeholder: dynamicComponent.component.placeholder,
-            type: dynamicComponent.component.type,
-            rules: dynamicComponent.component.validation.map((r) => {
-              const validationFunction = ValidationMap.get(r.ruleName);
-              if (r.withParam) {
-                return validationFunction && validationFunction(r.param);
-              } else {
-                return validationFunction && validationFunction();
-              }
-            }),
-          });
-        }
-      }
-    }
-
-    console.log("newSchema", newSchema);
-    if (Object.keys(newSchema).length > 0) {
-      setSchema(newSchema);
-      // setNewForm(generateForm(newSchema));
-      // generateForm(newSchema);
-    }
+    setSchema(generateShema(selectedComponents));
   };
 
   const handleAddDynamicForm = (add: boolean) => {
@@ -150,7 +65,7 @@ function App() {
     } else {
       setSelectedComponents([
         ...selectedComponents,
-        generateComponent({
+        generateBlankComponent({
           label: "DynamicForm",
           value: "dynamicForm",
         }),

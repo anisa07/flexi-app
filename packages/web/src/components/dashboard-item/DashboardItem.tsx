@@ -13,12 +13,18 @@ import {
 } from "@/src/components/ui/dialog";
 import { X } from "lucide-react";
 import { Rule, RulesSelector } from "../rule-selector/RuleSelector";
-import { SelectedComponent, generateComponent } from "@/src/App";
-import { FieldErrors, FieldValues, useForm } from "react-hook-form";
+import {
+  FieldErrors,
+  FieldValues,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
 import { useEffect, useState } from "react";
 import { ComponentSelector } from "../component-selector/ComponentSelector";
 import { Option } from "@/src/components/autocomplete/Autocomplete";
 import { ComponentDashboard } from "../component-dashboard/ComponentDashboard";
+import { SelectedComponent } from "@/src/types/SelectedComponent";
+import { generateBlankComponent } from "@/src/utils/generate-blank-component";
 
 export interface DashboardItemProps {
   selectedComponent: SelectedComponent;
@@ -40,8 +46,16 @@ export const DashboardItem = ({
     handleSubmit,
     formState: { isValid, errors },
     watch,
+    control,
   } = useForm({
     mode: "onChange",
+    defaultValues: {
+      radiogroup: [{ label: "", value: "" }],
+      formComponentName: "",
+      label: "",
+      format: "",
+      placeholder: "",
+    },
   });
   const [fieldRules, setFieldRules] = useState<Rule[]>([]);
   const [warningName, setWarningName] = useState("");
@@ -51,8 +65,16 @@ export const DashboardItem = ({
     SelectedComponent[]
   >([]);
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "radiogroup",
+  });
+
   const handleAddDynamicComponent = (option: Option) => {
-    setDynamicComponents([...dynamicComponents, generateComponent(option)]);
+    setDynamicComponents([
+      ...dynamicComponents,
+      generateBlankComponent(option),
+    ]);
   };
 
   const handleRemoveDynamicComponent = (id: string) => {
@@ -124,8 +146,11 @@ export const DashboardItem = ({
   const isComponentDynamicForm = () =>
     selectedComponent.component.type === "dynamicForm";
 
-  const isComponentDropdown = () =>
-    selectedComponent.component.type === "select";
+  const isDatepickerComponent = () =>
+    selectedComponent.component.type === "datepicker";
+
+  const isRadiogroupComponent = () =>
+    selectedComponent.component.type === "radiogroup";
 
   return (
     <div
@@ -149,7 +174,7 @@ export const DashboardItem = ({
                     selectedComponent.name}
                 </p>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-white">
+              <DialogContent className="sm:max-w-[425px] bg-white overflow-y-scroll max-h-screen">
                 <DialogHeader>
                   <DialogTitle>Component parameters</DialogTitle>
                   <DialogDescription>
@@ -185,7 +210,55 @@ export const DashboardItem = ({
                         defaultValue={selectedComponent.component.label}
                       />
                     </div>
-                    {!isComponentDynamicForm() && (
+                    {isDatepickerComponent() && (
+                      <div className="flex flex-col gap-1 mb-2">
+                        <Label htmlFor="date-format">
+                          date-fns format (default is "MM/dd/yyyy")
+                        </Label>
+                        <Input
+                          id="date-format"
+                          {...register("format")}
+                          defaultValue={selectedComponent.component.format}
+                        />
+                      </div>
+                    )}
+                    {isRadiogroupComponent() && (
+                      <div className="flex flex-col gap-1 mb-2">
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            append({ value: "", label: "" });
+                          }}
+                        >
+                          Add radio option
+                        </Button>
+                        {fields.map((field, index) => (
+                          <div
+                            key={field.id}
+                            className="flex gap-1 mb-2 items-end"
+                          >
+                            <div>
+                              <Label htmlFor={`${field.id}-label`}>Label</Label>
+                              <Input
+                                key={`${field.id}-label`}
+                                {...register(`radiogroup.${index}.label`)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`${field.id}-value`}>Value</Label>
+                              <Input
+                                key={`${field.id}-value`}
+                                {...register(`radiogroup.${index}.value`)}
+                              />
+                            </div>
+                            <Button onClick={() => remove(index)}>
+                              Delete
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!isComponentDynamicForm() && !isRadiogroupComponent() && (
                       <div className="flex flex-col gap-1 mb-2">
                         <Label htmlFor="placeholder">Placeholder</Label>
                         <Input

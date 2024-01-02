@@ -1,8 +1,8 @@
 import { Card } from "@/src/components/ui/card";
-import { SelectedComponent } from "@/src/App";
 import { DashboardItem } from "../dashboard-item/DashboardItem";
 import { FieldValues } from "react-hook-form";
 import { Rule } from "../rule-selector/RuleSelector";
+import { SelectedComponent } from "@/src/types/SelectedComponent";
 
 interface ComponentDashboardProps {
   selectedComponents: SelectedComponent[];
@@ -33,10 +33,12 @@ export const ComponentDashboard = ({
       ...selectedComponent,
       component: {
         ...selectedComponent.component,
+        format: data.format,
         formComponentName: data.formComponentName,
         placeholder: data.placeholder,
         label: data.label,
         validation: fieldRules,
+        radioGroupOptions: data.radiogroup,
       },
     });
   };

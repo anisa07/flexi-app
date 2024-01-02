@@ -4,8 +4,8 @@ import { FormSchema } from "../types/types";
 
 type useFormWrapperProps = {
   schema: FormSchema;
-  defaultValues: any; // replace 'any' with the appropriate type
-  nameForFieldsArray?: string;
+  defaultValues: Record<string, any>; // replace 'any' with the appropriate type
+  nameForFieldsArray: string;
   handleSubmit: (data: any) => void; // replace 'any' with the appropriate type
   mode: "onChange" | "onBlur" | "onSubmit" | "onTouched";
 };
@@ -13,7 +13,7 @@ type useFormWrapperProps = {
 export const useFormWrapper = ({
   schema,
   defaultValues,
-  nameForFieldsArray = "",
+  nameForFieldsArray,
   handleSubmit: customSubmitHandler,
   mode = "onSubmit",
 }: useFormWrapperProps) => {
@@ -37,7 +37,7 @@ export const useFormWrapper = ({
   };
 
   const submitForm = handleSubmit(handleSuctomSubmit);
-  console.log("formState", formState);
+  console.log("fields", fields);
   return {
     fields,
     append,

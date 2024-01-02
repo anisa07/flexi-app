@@ -1,29 +1,32 @@
-import { Controller, FieldValues } from "react-hook-form";
+import {
+  Control,
+  FieldErrors,
+  FieldValues,
+  UseFieldArrayAppend,
+  UseFieldArrayRemove,
+} from "react-hook-form";
 import { useFormWrapper } from "@flexi-app/validation/utils/useFormWrapper";
-import { Input } from "@/src/components/ui/input";
-// import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Checkbox } from "@/src/components/ui/checkbox";
-import { Switch } from "@/src/components/ui/switch";
+import { detectRenderComponent } from "./detect-render-component";
+import { RenderInputComponent } from "../components/rendered-components/RenderInputComponent";
+import { RenderCheckComponent } from "../components/rendered-components/RenderCheckComponent";
+import { RenderSelectComponent } from "../components/rendered-components/RenderSelectComponent";
+import { RenderDatepickerComponent } from "../components/rendered-components/RenderDatepickerComponent";
+import { RenderRadioGroupComponent } from "../components/rendered-components/RenderRadioGroupComponent";
+import { GeneratedSchema } from "../types/GeneratedSchema";
 
-const detectRenderType = (type: string) => {
-  if (["input", "password", "textarea"].includes(type)) {
-    return "renderInput";
+export const GeneratedForm = ({ schema }: { schema: GeneratedSchema }) => {
+  if (Object.keys(schema).length === 0) {
+    return <></>;
   }
-  if (type === "checkbox" || type === "togglebutton") {
-    return "renderCheck";
-  }
-};
 
-export const GeneratedForm = ({ schema }) => {
   const arrayOfFieldsName = Object.keys(schema).filter(
     (conmponent) => schema[conmponent].type === "array"
   );
-  const defaultValues = {};
+  const defaultValues: Record<string, any> = {};
   for (const key of Object.keys(schema)) {
     if (schema[key].type === "array") {
       defaultValues[key] = [{}];
-      for (const component of schema[key].validationRules) {
+      for (const component of schema[key].validationRules || []) {
         defaultValues[key][0] = {
           ...defaultValues[key][0],
           [component.name]: "",
@@ -48,7 +51,7 @@ export const GeneratedForm = ({ schema }) => {
   } = useFormWrapper({
     schema,
     defaultValues,
-    name: arrayOfFieldsName[0] || "",
+    nameForFieldsArray: arrayOfFieldsName[0] || "",
     handleSubmit: onSubmit,
     mode: "onChange",
   });
@@ -59,13 +62,13 @@ export const GeneratedForm = ({ schema }) => {
         return schema[componentName].type === "array" ? (
           <div className="flex flex-col" key={componentName}>
             <NewComponents
-              {...schema[componentName]}
               defaultValues={defaultValues[componentName][0]}
               append={append}
               remove={remove}
               fields={fields}
               control={control}
               errors={errors}
+              {...schema[componentName]}
             />
           </div>
         ) : (
@@ -76,10 +79,15 @@ export const GeneratedForm = ({ schema }) => {
             <NewComponent
               componentName={componentName}
               control={control}
-              errors={errors}
+              error={errors[componentName]?.error}
               label={schema[componentName].label}
               {...schema[componentName]}
             />
+            {errors[componentName] && (
+              <span className="mb-2 text-red-700">
+                {errors[componentName]?.errorMessage}
+              </span>
+            )}
           </div>
         );
       })}
@@ -87,56 +95,22 @@ export const GeneratedForm = ({ schema }) => {
       <button type="submit">Submit</button>
     </form>
   );
-
-  // for (const field in schema) {
-  //   console.log(field);
-  //   const component = detectType(
-  //     schema[field].type,
-  //     `{...register("${schema[field].name}")} placeholder="${schema[field].placeholder}"`
-  //   );
-  //   const newPieceOfCode = `
-  // <div style={{ display: "flex", flexDirection: "column" }}>
-  //   <label>${schema[field].label}</label>
-  //   ${component}
-  //   {errors.name && (
-  //     <span style={{ color: "red" }}>{errors.name?.errorMessage}</span>
-  //   )}
-  // </div>
-  //     `;
-  //   code = code + newPieceOfCode;
-  // }
-
-  // return `
-  //   import { FieldValues, useForm } from "react-hook-form";
-  //   import { validationResolver } from "@flexi-app/validation/validation-resolver/validation-resolver";
-  //   import { ExampleFormSchema } from "./ExampleFormSchema";
-
-  //   export const ExampleForm = () => {
-  //     const {
-  //       register,
-  //       handleSubmit,
-  //       formState: { errors, isValid },
-  //     } = useForm({
-  //       resolver: validationResolver(ExampleFormSchema),
-  //       mode: "onChange",
-  //     });
-
-  //     const onSubmit = (formData: FieldValues) => {
-  //       console.log("formData", formData);
-  //     };
-
-  //     return (
-  //       <form onSubmit={handleSubmit(onSubmit)}>
-  //         ${code}
-  //         <button type="submit">Submit</button>
-  //       </form>
-  //     )
-  //   }
-  //   `;
 };
 
-const NewComponent = ({ type, ...rest }) => {
-  const renderType = detectRenderType(type);
+interface NewComponentType {
+  type: string;
+  componentName: string;
+  control: Control<{}, any>;
+  label?: string;
+  error?: boolean;
+  placeholder?: string;
+  radioGroupOptions?: { label: string; value: string }[];
+  selectOptions?: { label: string; value: string }[];
+  format?: string;
+}
+
+const NewComponent = ({ type, ...rest }: NewComponentType) => {
+  const renderType = detectRenderComponent(type);
 
   if (renderType === "renderInput") {
     return <RenderInputComponent type={type} {...rest} />;
@@ -145,7 +119,41 @@ const NewComponent = ({ type, ...rest }) => {
   if (renderType === "renderCheck") {
     return <RenderCheckComponent type={type} {...rest} />;
   }
+
+  if (renderType === "renderSelect") {
+    return <RenderSelectComponent type={type} {...rest} />;
+  }
+
+  if (renderType === "renderDatepicker") {
+    return <RenderDatepickerComponent type={type} {...rest} />;
+  }
+
+  if (renderType === "renderRadiogroup") {
+    return <RenderRadioGroupComponent type={type} {...rest} />;
+  }
 };
+
+interface NewComponentsValidationRules {
+  type: string;
+  name: string;
+  label?: string;
+  error?: boolean;
+  placeholder?: string;
+  radioGroupOptions: { label: string; value: string }[];
+  selectOptions: { label: string; value: string }[];
+  format: string;
+}
+
+interface NewComponentsType {
+  name: string;
+  append: UseFieldArrayAppend<{}, never>;
+  remove: UseFieldArrayRemove;
+  control: Control<{}, any>;
+  fields: Record<"id", string>[];
+  errors: FieldErrors<{}>;
+  defaultValues: Record<string, string>;
+  validationRules: NewComponentsValidationRules[];
+}
 
 const NewComponents = ({
   name,
@@ -156,11 +164,16 @@ const NewComponents = ({
   validationRules,
   defaultValues,
   errors,
-}) => {
+}: NewComponentsType) => {
   return (
     <>
-      <button type="button" onClick={() => append(defaultValues)}>
-        append
+      <button
+        type="button"
+        onClick={() => {
+          append({ ...defaultValues });
+        }}
+      >
+        Append
       </button>
       <ul>
         {fields.map((item, index) => (
@@ -168,25 +181,25 @@ const NewComponents = ({
             {validationRules.map((componentOfArray) => {
               return (
                 <div key={componentOfArray.name}>
-                  <div>
-                    <Controller
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          style={{ border: "1px solid black" }}
-                          placeholder={componentOfArray.placeholder || ""}
-                        />
-                      )}
-                      name={`${name}.${index}.${componentOfArray.name}`}
-                      control={control}
-                    />
-                    <p style={{ color: "red", fontSize: "12px", margin: 0 }}>
-                      {errors?.[name] &&
-                        errors?.[name][index]?.[componentOfArray.name]?.error &&
-                        errors?.[name][index]?.[componentOfArray.name]
-                          ?.errorMessage}
-                    </p>
-                  </div>
+                  <NewComponent
+                    componentName={`${name}.${index}.${componentOfArray.name}`}
+                    control={control}
+                    error={
+                      errors?.[name] &&
+                      errors?.[name][index]?.[componentOfArray.name]?.error
+                    }
+                    label={componentOfArray.label}
+                    {...componentOfArray}
+                  />
+                  <p
+                    className="text-red-700"
+                    style={{ fontSize: "12px", margin: 0 }}
+                  >
+                    {errors?.[name] &&
+                      errors?.[name][index]?.[componentOfArray.name]?.error &&
+                      errors?.[name][index]?.[componentOfArray.name]
+                        ?.errorMessage}
+                  </p>
                 </div>
               );
             })}
@@ -198,98 +211,5 @@ const NewComponents = ({
         ))}
       </ul>
     </>
-  );
-};
-
-const RenderInputComponent = ({
-  type,
-  componentName,
-  control,
-  errors,
-  label,
-  ...rest
-}) => {
-  return (
-    <>
-      {label && (
-        <label
-          htmlFor={componentName}
-          className={`${errors[componentName] && "text-red-700"}`}
-        >
-          {label}
-        </label>
-      )}
-      <Controller
-        render={({ field }) => (
-          <div className="mb-1">
-            {type === "textarea" && (
-              <Textarea id={componentName} {...rest} {...field} />
-            )}
-            {(type === "input" || type === "password") && (
-              <Input id={componentName} type={type} {...rest} {...field} />
-            )}
-          </div>
-        )}
-        name={componentName}
-        control={control}
-      />
-      {errors[componentName] && (
-        <span className="mb-2 text-red-700">
-          {errors[componentName]?.errorMessage}
-        </span>
-      )}
-    </>
-  );
-};
-
-const RenderCheckComponent = ({
-  control,
-  componentName,
-  errors,
-  label,
-  type,
-}) => {
-  return (
-    <Controller
-      name={componentName}
-      control={control}
-      render={({ field }) => {
-        return (
-          <div className="items-top flex space-x-2">
-            {type === "checkbox" && (
-              <Checkbox
-                id={componentName}
-                {...field}
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            )}
-            {type === "togglebutton" && (
-              <Switch
-                id={componentName}
-                {...field}
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            )}
-            <div className="grid gap-1.5 leading-none">
-              {label && (
-                <label
-                  htmlFor={componentName}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {label}
-                </label>
-              )}
-              {errors[componentName] && (
-                <span className="mb-2 text-red-700">
-                  {errors[componentName]?.errorMessage}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      }}
-    />
   );
 };
