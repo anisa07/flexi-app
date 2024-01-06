@@ -13,6 +13,7 @@ import { RenderSelectComponent } from "../components/rendered-components/RenderS
 import { RenderDatepickerComponent } from "../components/rendered-components/RenderDatepickerComponent";
 import { RenderRadioGroupComponent } from "../components/rendered-components/RenderRadioGroupComponent";
 import { GeneratedSchema } from "../types/GeneratedSchema";
+import { Button } from "../components/ui/button";
 
 export const GeneratedForm = ({ schema }: { schema: GeneratedSchema }) => {
   if (Object.keys(schema).length === 0) {
@@ -167,17 +168,17 @@ const NewComponents = ({
 }: NewComponentsType) => {
   return (
     <>
-      <button
-        type="button"
+      <Button
+        className="mb-4 w-20"
         onClick={() => {
           append({ ...defaultValues });
         }}
       >
-        Append
-      </button>
+        Add new set of filds
+      </Button>
       <ul>
         {fields.map((item, index) => (
-          <li key={item.id} style={{ display: "flex" }}>
+          <li key={item.id} className="flex mb-1.5">
             {validationRules.map((componentOfArray) => {
               return (
                 <div key={componentOfArray.name}>
@@ -203,10 +204,10 @@ const NewComponents = ({
                 </div>
               );
             })}
-            <button type="button" onClick={() => remove(index)}>
+            <Button onClick={() => remove(index)} className="flex ml-1">
               Delete
-            </button>
-            <div style={{ color: "red", fontSize: "12px" }}></div>
+            </Button>
+            {/* <div style={{ color: "red", fontSize: "12px" }}></div> */}
           </li>
         ))}
       </ul>
