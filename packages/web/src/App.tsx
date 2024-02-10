@@ -93,15 +93,28 @@ function App() {
               selectedComponents={selectedComponents}
               onRemoveComponent={handleRemoveComponent}
               onUpdateComponent={handleUpdateComponent}
+              onSetComponents={setSelectedComponents}
             />
-            <Button onClick={handleGenerateSchema} className="mt-4">
+            <Button onClick={handleGenerateSchema} className="mt-4 mr-4">
               Generate schema
             </Button>
+            {schema && Object.keys(schema).length > 0 && (
+              <Button
+                onClick={() => {
+                  setSchema({});
+                  setSelectedComponents([]);
+                }}
+                className="mt-4"
+              >
+                Clean
+              </Button>
+            )}
           </div>
-          <div className="flex-1">
-            {/* <CodeSnippet code={newForm} /> */}
-            {schema && <GeneratedForm schema={schema} />}
-          </div>
+          {schema && Object.keys(schema).length > 0 && (
+            <div className="flex-1">
+              <GeneratedForm schema={schema} />
+            </div>
+          )}
         </div>
       </div>
     </DndProvider>

@@ -1,0 +1,11 @@
+{
+  "name": "@flexi-app/backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:backend": "nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run server.go"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

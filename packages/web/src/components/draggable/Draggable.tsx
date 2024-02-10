@@ -52,7 +52,11 @@ export const Draggable = ({
     <div
       className="mr-2"
       ref={daraggableRef}
-      style={{ opacity: isDragging ? 0 : 1, background: "transparent" }}
+      style={{
+        opacity: isDragging ? 0 : 1,
+        background: "transparent",
+        display: "inline-block",
+      }}
     >
       {children}
     </div>
