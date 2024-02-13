@@ -10,70 +10,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func cascadeCreate(input models.ComponentInput) models.Component {
-	validation := []models.Validation{}
-	selectOptions := []models.SelectOptions{}
-	radioGroupOptions := []models.RadioGroupOptions{}
-
-	for i := range input.Validation {
-		input := input.Validation[i]
-        validation = append(validation, models.Validation{
-			Param: input.Param,
-			RuleName: input.RuleName,
-			WithParam: input.WithParam,
-		})
-    }
-
-	for i := range input.SelectOptions {
-		input := input.SelectOptions[i]
-        selectOptions = append(selectOptions, models.SelectOptions{
-			Value: input.Value,
-			Label: input.Label,
-		})
-    }
-
-	for i := range input.RadioGroupOptions {
-		input := input.RadioGroupOptions[i]
-        radioGroupOptions = append(radioGroupOptions, models.RadioGroupOptions{
-			Value: input.Value,
-			Label: input.Label,
-		})
-    }
-
-	component := models.Component{
-		FormComponentName: input.FormComponentName,
-		Type: input.Type,
-		Label: input.Label,
-		Placeholder: input.Placeholder,
-		Format: input.Format,
-		Validation: validation,
-		SelectOptions: selectOptions,
-		RadioGroupOptions: radioGroupOptions,
-		SubComponents: []models.Component{},
-	}
-
-	return component
-} 
-
-func createComponent(input models.SelectedComponentInput) models.SelectedComponent {
-	subComponents := []models.Component{}
-	component := cascadeCreate(input.Component)	
-
-	for i := range input.Component.SubComponents {
-		input := input.Component.SubComponents[i]
-		subComponent := cascadeCreate(input)
-		subComponents = append(subComponents, subComponent)
-	}
-
-	component.SubComponents = subComponents
-
-	selectedComponent := models.SelectedComponent{
-		Name: input.Name,
-		Component: component,
-	}
-	return selectedComponent
-}
-
 func getSelectedComponents(c *gin.Context) {
 	var selectedComponents []models.SelectedComponent
 
@@ -128,6 +64,70 @@ func deleteSelectedComponent(c *gin.Context) {
 	models.DB.Where("id = ?", selectedComponent.ID).Delete(&selectedComponent)
 	
 	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func cascadeCreate(input models.ComponentInput) models.Component {
+	validation := []models.Validation{}
+	selectOptions := []models.SelectOptions{}
+	radioGroupOptions := []models.RadioGroupOptions{}
+
+	for i := range input.Validation {
+		input := input.Validation[i]
+        validation = append(validation, models.Validation{
+			Param: input.Param,
+			RuleName: input.RuleName,
+			WithParam: input.WithParam,
+		})
+    }
+
+	for i := range input.SelectOptions {
+		input := input.SelectOptions[i]
+        selectOptions = append(selectOptions, models.SelectOptions{
+			Value: input.Value,
+			Label: input.Label,
+		})
+    }
+
+	for i := range input.RadioGroupOptions {
+		input := input.RadioGroupOptions[i]
+        radioGroupOptions = append(radioGroupOptions, models.RadioGroupOptions{
+			Value: input.Value,
+			Label: input.Label,
+		})
+    }
+
+	component := models.Component{
+		FormComponentName: input.FormComponentName,
+		Type: input.Type,
+		Label: input.Label,
+		Placeholder: input.Placeholder,
+		Format: input.Format,
+		Validation: validation,
+		SelectOptions: selectOptions,
+		RadioGroupOptions: radioGroupOptions,
+		SubComponents: []models.Component{},
+	}
+
+	return component
+}
+
+func createComponent(input models.SelectedComponentInput) models.SelectedComponent {
+	subComponents := []models.Component{}
+	component := cascadeCreate(input.Component)	
+
+	for i := range input.Component.SubComponents {
+		input := input.Component.SubComponents[i]
+		subComponent := cascadeCreate(input)
+		subComponents = append(subComponents, subComponent)
+	}
+
+	component.SubComponents = subComponents
+
+	selectedComponent := models.SelectedComponent{
+		Name: input.Name,
+		Component: component,
+	}
+	return selectedComponent
 }
 
 func createSelectedComponents(c *gin.Context) {

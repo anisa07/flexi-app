@@ -6,7 +6,7 @@ export const generateShema = (
   selectedComponents: SelectedComponent[]
 ): GeneratedSchema => {
   console.log("selectedComponents", selectedComponents);
-  const newSchema = {} as GeneratedSchema;
+  const newSchema: GeneratedSchema = {};
 
   for (const selected of selectedComponents) {
     const name = selected.component.formComponentName;
@@ -88,6 +88,5 @@ export const generateShema = (
     }
   }
 
-  console.log("newSchema", newSchema);
   return newSchema;
 };

@@ -6,6 +6,7 @@
   "scripts": {
     "test:validation": "pnpm --stream -r run test:validation",
     "dev:web": "pnpm --stream -r run dev:web",
+    "dev:backend": "pnpm --stream -r run dev:backend",
     "dev:validation": "pnpm --stream -r run dev:validation"
   },
   "keywords": [],
