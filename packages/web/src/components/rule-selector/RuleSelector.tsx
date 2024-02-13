@@ -4,9 +4,19 @@ import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { X, Check } from "lucide-react";
-import { useRef, useState } from "react";
+import { ReactElement, useRef, useState } from "react";
 import { checkRuleParams } from "@/src/utils/check-rule-params";
-import { Draggable } from "../draggable/Draggable";
+// import { Draggable } from "../draggable/Draggable";
+// import { useDroppable } from "@dnd-kit/core";
+import {
+  // arrayMove,
+  SortableContext,
+  // sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useDargAndDrop } from "../drag-and-drop/useDragAndDrop";
 
 const rules = [
   {
@@ -123,14 +133,6 @@ export const RulesSelector = ({
     );
   };
 
-  const onMove = (currentIndex: number, nextIndex: number) => {
-    const copyRules = [...fieldRules];
-    const nextRuleCopy = { ...copyRules[nextIndex] };
-    copyRules[nextIndex] = { ...copyRules[currentIndex] };
-    copyRules[currentIndex] = nextRuleCopy;
-    onUpdateFieldRules(copyRules);
-  };
-
   return (
     <>
       <div>
@@ -162,17 +164,27 @@ export const RulesSelector = ({
         </div>
       )}
       {fieldRules.length > 0 && (
-        <div className="flex border p-2 flex-wrap">
-          {fieldRules.map((validationRule: Rule, index: number) => (
-            <RuleItem
-              key={validationRule.ruleName}
-              validationRule={validationRule}
-              index={index}
-              onRemoveRule={onRemoveRule}
-              onMove={onMove}
-            />
-          ))}
-        </div>
+        <SortableContext
+          items={fieldRules.map((rule) => ({ id: rule.ruleName, ...rule }))}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex border p-2 flex-wrap">
+            {fieldRules.map((validationRule: Rule) => (
+              <SortableRule
+                key={validationRule.ruleName}
+                id={validationRule.ruleName}
+              >
+                <RuleItem
+                  key={validationRule.ruleName}
+                  validationRule={validationRule}
+                  // index={index}
+                  onRemoveRule={onRemoveRule}
+                  // onMove={onMove}
+                />
+              </SortableRule>
+            ))}
+          </div>
+        </SortableContext>
       )}
     </>
   );
@@ -181,32 +193,54 @@ export const RulesSelector = ({
 const RuleItem = ({
   validationRule,
   onRemoveRule,
-  onMove,
-  index,
 }: {
   validationRule: Rule;
   onRemoveRule: (name: string) => void;
-  onMove: (currentIndex: number, nextIndex: number) => void;
-  index: number;
 }) => {
   const handleRemoveRule = () => {
     onRemoveRule(validationRule.ruleName);
   };
 
   return (
-    <Draggable onMove={onMove} index={index} id={validationRule.ruleName}>
-      <div className="mr-1 mb-1  border-2 border-solid rounded-sm">
-        <Badge key={validationRule.ruleName}>
-          {validationRule.rule}
-          <X
-            className="ml-1 h-4 w-4"
-            onClick={(e) => {
-              e.preventDefault();
-              handleRemoveRule();
-            }}
-          />
-        </Badge>
-      </div>
-    </Draggable>
+    <div className="mr-1 mb-1 border-2 border-solid rounded-sm">
+      <Badge>
+        {validationRule.rule}
+        <X
+          className="ml-1 h-4 w-4"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            handleRemoveRule();
+          }}
+        />
+      </Badge>
+    </div>
   );
 };
+
+function SortableRule({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactElement;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id,
+      data: {
+        type: "rule-item",
+      },
+    });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    display: "inline-block",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
